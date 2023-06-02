@@ -17,7 +17,8 @@ crash.*.log
 *.tfvars.json
 
 # Exclude lock files
-*.terraform.lock.*
+*.terraform.lock.hcl
+
 
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in
@@ -35,3 +36,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+#Ignore key pairs for the ec2 instances
+*.pem
