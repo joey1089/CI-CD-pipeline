@@ -40,7 +40,6 @@ resource "aws_default_route_table" "default_route" {
 }
 
 # Public IP and add to Security Group
-
 data "external" "myipaddr" {
   program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
 }
@@ -111,8 +110,10 @@ resource "aws_iam_policy" "ec2_role_policy" {
     Statement = [
       {
         Action = [
-          "s3:Get*",
-          "s3:List*"
+               "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -133,15 +134,31 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+# Create SSH Keys for EC2 Remote Access
+resource "tls_private_key" "generated" {
+  algorithm = "RSA"
+}
+
+resource "local_file" "private_key_pem" {
+  content         = tls_private_key.generated.private_key_pem
+  filename        = "${var.ssh_key_name}.pem"
+  file_permission = "0400"
+}
+
+resource "aws_key_pair" "generated" {
+  key_name   = var.ssh_key_name
+  public_key = tls_private_key.generated.public_key_openssh
+}
+
 # EC2 Instance
 resource "aws_instance" "ec2_instance" {
   ami                  = var.ami
   instance_type        = var.instance_type
   key_name             = var.ssh_key_name
   security_groups      = [aws_security_group.jenkins_security_group.id]
-  subnet_id            = aws_subnet.s.id
+  subnet_id            = aws_subnet.subnet_public.id
   iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
-  user_data            = var.ec2_user_data
+  user_data            = var.user_data
   tags = {
     Name = var.ec2_tag
   }
@@ -158,9 +175,9 @@ resource "aws_s3_bucket" "s3_bucket" {
 }
 
 # S3 Bucket ACL
-resource "aws_s3_bucket_acl" "jenkinsbucketacl" {
-  bucket = var.bucket_name
-  acl    = "private"
-  depends_on = [aws_s3_bucket_ownership_controls.aws_s3_bucket_acl]
-#   depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
-}
+# resource "aws_s3_bucket_acl" "jenkinsbucketacl" {
+#   bucket = var.bucket_name
+#   acl    = "private"
+#   depends_on = [aws_s3_bucket_ownership_controls.aws_s3_bucket.s3_bucket_acl_ownership]
+# #   depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
+# }
