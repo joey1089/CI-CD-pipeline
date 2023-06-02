@@ -148,12 +148,13 @@ resource "aws_instance" "ec2_instance" {
 }
 
 # S3 Bucket
-resource "aws_s3_bucket" "s3" {
+resource "aws_s3_bucket" "s3_bucket" {
   bucket = var.bucket_name
 
   tags = {
     Name = var.bucket_name
-  }
+    Environment = var.environment
+  } 
 }
 
 resource "aws_s3_bucket_acl" "jenkinsbucketacl" {

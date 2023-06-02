@@ -66,6 +66,10 @@ variable "bucket_name" {
   default = "custom-s3-bucket-4-jenkins-artifacts"
 }
 
+variable "environment" {
+  default = "Testing"
+}
+
 variable "security_group_name" {
   default = "security-group-SG"
 }
