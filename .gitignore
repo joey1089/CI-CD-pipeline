@@ -16,7 +16,7 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 
-# Exclude lock files
+# Exclude terraform lock hcl files
 *.terraform.lock.hcl
 
 
