@@ -1,6 +1,6 @@
 #---------- root/main.tf -----------
 
-# VPC
+# Custom VPC
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr
 
@@ -9,8 +9,8 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-# Subnet
-resource "aws_subnet" "Subnet_public" {
+# Public Subnet
+resource "aws_subnet" "subnet_public" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = var.subnet_cidr
   map_public_ip_on_launch = true
@@ -139,7 +139,7 @@ resource "aws_instance" "ec2_instance" {
   instance_type        = var.instance_type
   key_name             = var.ssh_key_name
   security_groups      = [aws_security_group.jenkins_security_group.id]
-  subnet_id            = aws_subnet.Subnet_public.id
+  subnet_id            = aws_subnet.s.id
   iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
   user_data            = var.ec2_user_data
   tags = {
@@ -147,7 +147,7 @@ resource "aws_instance" "ec2_instance" {
   }
 }
 
-# S3 Bucket
+# S3 Buckets
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = var.bucket_name
 
@@ -157,7 +157,10 @@ resource "aws_s3_bucket" "s3_bucket" {
   } 
 }
 
+# S3 Bucket ACL
 resource "aws_s3_bucket_acl" "jenkinsbucketacl" {
   bucket = var.bucket_name
   acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.aws_s3_bucket_acl]
+#   depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
 }

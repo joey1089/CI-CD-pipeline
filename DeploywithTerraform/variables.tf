@@ -23,7 +23,7 @@ variable "ec2_tag" {
 }
 
 variable "vpc_cidr" {
-  default = "10.0.0.0/16"
+  default = "10.10.0.0/16"
 }
 
 variable "vpc_tag" {
@@ -31,7 +31,7 @@ variable "vpc_tag" {
 }
 
 variable "subnet_cidr" {
-  default = "10.0.0.0/24"
+  default = "10.10.0.0/24"
 }
 
 variable "subnet_tag" {
