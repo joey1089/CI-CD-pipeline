@@ -110,10 +110,10 @@ resource "aws_iam_policy" "ec2_role_policy" {
     Statement = [
       {
         Action = [
-               "s3:ListBucket",
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject"
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -150,7 +150,7 @@ resource "aws_key_pair" "generated" {
   public_key = tls_private_key.generated.public_key_openssh
 }
 
-# EC2 Instance
+# EC2 Instance - AMI -Amazon # Linux
 resource "aws_instance" "ec2_instance" {
   ami                  = var.ami
   instance_type        = var.instance_type
@@ -164,14 +164,40 @@ resource "aws_instance" "ec2_instance" {
   }
 }
 
+# EC2 Instance - Ubuntu -Ubuntu, 22.04 LTS
+resource "aws_instance" "ubuntu-instance" {
+  ami             = "ami-053b0d53c279acc90"
+  instance_type   = "t3.small"
+  key_name        = var.ssh_key_name
+  security_groups = [aws_security_group.jenkins_security_group.id]
+  subnet_id       = aws_subnet.subnet_public_ubuntu.id
+  tags = {
+    Name = "Ubuntu-Jenkins-Test-Server"
+  }
+
+
+}
+
+# subnet public
+resource "aws_subnet" "subnet_public_ubuntu" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.10.1.0/24"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "subnet_public_ubuntu"
+  }
+
+}
+
 # S3 Buckets
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = var.bucket_name
 
   tags = {
-    Name = var.bucket_name
+    Name        = var.bucket_name
     Environment = var.environment
-  } 
+  }
 }
 
 # S3 Bucket ACL
