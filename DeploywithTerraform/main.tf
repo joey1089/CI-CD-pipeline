@@ -129,8 +129,8 @@ resource "aws_iam_role_policy_attachment" "ec2_role_policy_attachment" {
 }
 
 # IAM Instance Profile
-resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = var.ec2_instance_profile_name
+resource "aws_iam_instance_profile" "amazon_instance_profile" {
+  name = var.amazon_instance_profile_name
   role = aws_iam_role.ec2_role.name
 }
 
@@ -151,17 +151,21 @@ resource "aws_key_pair" "generated" {
 }
 
 # EC2 Instance - AMI -Amazon # Linux
-resource "aws_instance" "ec2_instance" {
+resource "aws_instance" "amazon_instance" {
   ami                  = var.ami
   instance_type        = var.instance_type
   key_name             = var.ssh_key_name
   security_groups      = [aws_security_group.jenkins_security_group.id]
   subnet_id            = aws_subnet.subnet_public.id
-  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
+  iam_instance_profile = aws_iam_instance_profile.amazon_instance_profile.name
   user_data            = var.user_data
   tags = {
     Name = var.ec2_tag
   }
+}
+
+data "template_file" "user_data" {
+  template = var.user_data_ubuntu
 }
 
 # EC2 Instance - Ubuntu -Ubuntu, 22.04 LTS
@@ -171,6 +175,15 @@ resource "aws_instance" "ubuntu-instance" {
   key_name        = var.ssh_key_name
   security_groups = [aws_security_group.jenkins_security_group.id]
   subnet_id       = aws_subnet.subnet_public_ubuntu.id
+  user_data       = data.template_file.user_data.rendered
+
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = 10
+    throughput            = 300
+    delete_on_termination = true
+  }
+
   tags = {
     Name = "Ubuntu-Jenkins-Test-Server"
   }
@@ -181,7 +194,7 @@ resource "aws_instance" "ubuntu-instance" {
 # subnet public
 resource "aws_subnet" "subnet_public_ubuntu" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.10.1.0/24"
+  cidr_block              = "10.10.2.0/24"
   map_public_ip_on_launch = true
 
   tags = {
@@ -190,12 +203,19 @@ resource "aws_subnet" "subnet_public_ubuntu" {
 
 }
 
+resource "random_id" "random_time" {
+  keepers = {
+    first = "${timestamp()}"
+  }     
+  byte_length = 8
+}
+
 # S3 Buckets
 resource "aws_s3_bucket" "s3_bucket" {
-  bucket = var.bucket_name
+  bucket = "jenkins-s3-artifacts-${random_id.random_time.id}"
 
   tags = {
-    Name        = var.bucket_name
+    Name        = "jenkins-s3-artifacts"
     Environment = var.environment
   }
 }

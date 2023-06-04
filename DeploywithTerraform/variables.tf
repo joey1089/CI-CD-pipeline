@@ -12,8 +12,28 @@ variable "ssh_key_name" {
   default = "key-pair-jens"
 }
 
+variable "user_data_ubuntu" {
+  description = "User data script for EC2 Ubuntu 22.04 LTS"
+  type        = string
+  default     = <<EOF
+                  #!/bin/bash
+                  # Install Java and then Jenkins
+                  apt update && apt upgrade -y
+                  apt install openjdk-11-jdk -y
+                  curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee \
+                    /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+                  echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+                    https://pkg.jenkins.io/debian-stable binary/ | tee \
+                    /etc/apt/sources.list.d/jenkins.list > /dev/null
+                  apt-get update
+                  apt-get install jenkins
+                  systemctl enable jenkins
+                  systemctl start jenkins
+                  EOF
+}
+
 variable "user_data" {
-  description = "User data script for EC2"
+  description = "User data script for EC2 Amazon Linux"
   type        = string
   default     = <<EOF
                         #!/bin/bash
@@ -49,7 +69,11 @@ variable "user_data" {
 }
 
 variable "ec2_tag" {
-  default = "jenkins-01"
+  default = "Amazon-Jenkins-Server"
+}
+
+variable "ubuntu_ec2_tag" {
+  default = "Ubuntu-Jenkins-Server"
 }
 
 variable "vpc_cidr" {
@@ -76,8 +100,8 @@ variable "ec2_role_name" {
   default = "ec2_role"
 }
 
-variable "ec2_instance_profile_name" {
-  default = "ec2_instance_profile"
+variable "amazon_instance_profile_name" {
+  default = "amazon_instance_profile"
 }
 
 variable "ec2_role_policy_name" {
@@ -92,9 +116,9 @@ variable "ec2-s3-permissions" {
   default = "s3-permissions.json"
 }
 
-variable "bucket_name" {
-  default = "s3-bucket-jenkins-artifacts"
-}
+# variable "bucket_name" {
+#   default = "s3-bucket-jenkins-artifacts"
+# }
 
 variable "environment" {
   default = "Testing"
